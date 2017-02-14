@@ -1,0 +1,29 @@
+{
+   "content_scripts": [
+      {
+      "all_frames": true,
+      "js": [ "socket.io.min.js", "main.fmt.js" ],
+      "matches": [ "http://fantasyland.ru/main.php", "http://www.fantasyland.ru/main.php" ]
+      },
+      {
+      "all_frames": true,
+      "js": [ "no_combat.fmt.js" ],
+      "matches": [ "http://fantasyland.ru/cgi/no_combat.php", "http://www.fantasyland.ru/cgi/no_combat.php" ]
+      },
+      {
+      "all_frames": true,
+      "js": [ "combat_panel.fmt.js" ],
+      "matches": [ "http://fantasyland.ru/cgi/combat_panel.php", "http://www.fantasyland.ru/cgi/combat_panel.php" ]
+      },
+      {
+      "all_frames": true,
+      "js": [ "maze_ref.fmt.js" ],
+      "matches": [ "http://fantasyland.ru/cgi/maze_ref.php*", "http://www.fantasyland.ru/cgi/maze_ref.php*" ]
+      }
+   ],
+   "description": "Сетевой картограф от Фортиса",
+   "manifest_version": 2,
+   "name": "Сетевой картограф FMT",
+   "permissions": [ "storage", "http://lg.fortis-ts.ru/*" ],
+   "version": "5.41"
+}

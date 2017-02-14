@@ -1,0 +1,1 @@
+window.top.Map.ProcessCombatPanel(document.head.innerHTML);

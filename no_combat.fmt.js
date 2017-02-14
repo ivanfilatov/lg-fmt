@@ -1,0 +1,1 @@
+window.top.Map.ProcessNoCombat(document.head.innerHTML);
