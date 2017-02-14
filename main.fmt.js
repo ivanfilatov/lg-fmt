@@ -17,7 +17,7 @@
  */
 
 var IMGPATH = chrome.extension.getURL("img");
-var VERSION = '5.42';
+var VERSION = '5.43';
 
 Map = {
     NickName: false,
@@ -565,6 +565,7 @@ Map = {
         var time = false;
         var cellowner = false;
         var cellold = false;
+        var cellobj = '';
         if (cellData) {
             var splitCellData = cellData.split('||');
             cell = splitCellData[0];
@@ -575,6 +576,9 @@ Map = {
             var currhour = parseInt(this.GetGameTime().split(':')[0]);
             if (cellhour < currhour || (cellhour >= 4 && cellhour <= 23 && currhour >= 0 && currhour <= 3)) {
                 cellold = true;
+            }
+            if(splitCellData[3]) {
+                cellobj = "\nОбъект: " + splitCellData[3];
             }
         }
 
@@ -732,7 +736,7 @@ Map = {
             }
 
             if (celltime && cellowner) {
-                mapCell.setAttribute('title', '' + x + 'x' + y + ' (' + celltime + ', ' + cellowner + ')');
+                mapCell.setAttribute('title', '' + x + 'x' + y + ' (' + celltime + ', ' + cellowner + ')' + cellobj);
             }
         }
     },
@@ -866,7 +870,8 @@ Map = {
         }
     },
     ParseMazeFile: function (mazeFile) {
-        var mazeFileStr = mazeFile.substr(mazeFile.indexOf('{') + 1, mazeFile.indexOf('}') - mazeFile.indexOf('{')).replace(/\s/g, '');
+        var mazeFileStrWS = mazeFile.substr(mazeFile.indexOf('{') + 1, mazeFile.indexOf('}') - mazeFile.indexOf('{'));
+        var mazeFileStr = mazeFileStrWS.replace(/\s/g, '');
         var mazeFileArr = mazeFileStr.split(';');
 
         var trap = 0;
@@ -884,6 +889,9 @@ Map = {
         var move_s = 0;
         var items = false;
         var mobs = false;
+
+        var objectRegex = /<TD>';strDiv\+='<b>(.*)<\/b><\/TD>/g;
+        var objectInfo = false;
 
         var moofuncstr = mazeFileArr[mazeFileArr.length - 3];
         var moofunc = moofuncstr.substr(4, moofuncstr.length - 5).split(',');
@@ -914,8 +922,20 @@ Map = {
         }
         if (mazeFileStr.indexOf('Вынаходите:') != -1) {
             if (mazeFileStr.indexOf('Портал') != -1 || mazeFileStr.indexOf('Капище') != -1) {
+                objectInfo = objectRegex.exec(mazeFileStrWS);
+                if(objectInfo.length > 1) {
+                    objectInfo = objectInfo[1];
+                } else {
+                    objectInfo = false;
+                }
                 exit = 1;
             } else {
+                objectInfo = objectRegex.exec(mazeFileStrWS);
+                if(objectInfo.length > 1) {
+                    objectInfo = objectInfo[1];
+                } else {
+                    objectInfo = false;
+                }
                 object = 1;
             }
         }
@@ -937,7 +957,7 @@ Map = {
         this.CurCoordY = y;
         this.CurLevel = lvl;
         var timestamp = 'h-' + this.GetGameTime();
-        this.CurCellData = '' + trap + '' + flag + '' + object + '' + up + '' + down + '' + exit + '' + move_n + '' + move_w + '' + move_e + '' + move_s + '||' + timestamp + '||' + this.NickName;
+        this.CurCellData = '' + trap + '' + flag + '' + object + '' + up + '' + down + '' + exit + '' + move_n + '' + move_w + '' + move_e + '' + move_s + '||' + timestamp + '||' + this.NickName + (objectInfo ? '||' + objectInfo : '');
         if (items) {
             this.CurCellHasItems = true;
         } else {

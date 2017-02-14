@@ -74,6 +74,10 @@ io.sockets.on('connection', function (player) {
             redis.set('fmt:locations:' + player.identity, player.location);
             io.to(locationName).emit('join-location', player.identity);
         }
+        var splitData = data.split('||');
+        if (splitData[3]) {
+            redis.set('fmt:objectdata:' + locationName + ':' + xc + 'x' + yc, splitData[3]);
+        }
         redis.set('fmt:mazedata:' + locationName + ':' + xc + 'x' + yc, data);
         io.to(locationName).emit('recieve-celldata', pl, lc, dp, xc, yc, data, player.identity);
         logLastActivity(redis, player.identity);
