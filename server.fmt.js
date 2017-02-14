@@ -18,7 +18,7 @@ io.sockets.on('connection', function (player) {
     player.pluginVersion = false;
 
     player.on('pass-connection', function (clientVersion) {
-        if(clientVersion) {
+        if (clientVersion) {
             player.pluginVersion = clientVersion;
         }
         //if(clientVersion == serverExpectVersion) {
@@ -34,7 +34,7 @@ io.sockets.on('connection', function (player) {
         if (nickname !== false) {
             player.identity = nickname;
             player.emit('approve-identity', player.identity);
-            console.log('Identified: ' + player.identity);
+            //console.log('Identified: ' + player.identity);
             redis.set('fmt:identities:' + player.identity, player.id);
             redis.set('fmt:versions:' + player.identity, player.pluginVersion);
             logLastActivity(redis, player.identity);
@@ -43,9 +43,9 @@ io.sockets.on('connection', function (player) {
 
     player.on('pass-location', function (pl, lc, dp) {
         if (dp !== false && dp !== null) {
-            locationName = 'p'+pl+'-l'+lc+'-d'+dp;
+            locationName = 'p' + pl + '-l' + lc + '-d' + dp;
         } else {
-            locationName = 'p'+pl+'-l'+lc;
+            locationName = 'p' + pl + '-l' + lc;
         }
         if (locationName != player.location) {
             if (player.location) {
@@ -61,9 +61,9 @@ io.sockets.on('connection', function (player) {
         player.emit('approve-location', locationName);
         //console.log('Passed location: ' + locationName);
     });
-    
+
     player.on('pass-celldata', function (pl, lc, dp, xc, yc, data) {
-        locationName = 'p'+pl+'-l'+lc+'-d'+dp;
+        locationName = 'p' + pl + '-l' + lc + '-d' + dp;
         if (locationName != player.location) {
             if (player.location) {
                 player.leave(player.location);
@@ -78,11 +78,11 @@ io.sockets.on('connection', function (player) {
         io.to(locationName).emit('recieve-celldata', pl, lc, dp, xc, yc, data, player.identity);
         logLastActivity(redis, player.identity);
         player.emit('approve-celldata', pl, lc, dp, xc, yc, data);
-        console.log('Passed celldata: ' + locationName + ' - coords ' + xc + 'x' + yc + ' - data ' + data + ' - ' + player.identity);
+        //console.log('Passed celldata: ' + locationName + ' - coords ' + xc + 'x' + yc + ' - data ' + data + ' - ' + player.identity);
     });
-    
+
     player.on('request-mapdata', function (pl, lc, dp) {
-        locationName = 'p'+pl+'-l'+lc+'-d'+dp;
+        locationName = 'p' + pl + '-l' + lc + '-d' + dp;
         redis.keys('fmt:mazedata:' + locationName + ':*', function (err, cellnames) {
             redis.mget(cellnames, function (err, celldatas) {
                 for (var cellcount = 0; cellcount < cellnames.length; cellcount++) {
@@ -92,19 +92,19 @@ io.sockets.on('connection', function (player) {
             });
         });
     });
-    
+
     player.on('initiate-combat', function (pl, lc, dp, xc, yc, combatnum) {
-        locationName = 'p'+pl+'-l'+lc+'-d'+dp;
+        locationName = 'p' + pl + '-l' + lc + '-d' + dp;
         redis.set('fmt:combatdata:' + locationName + ':' + xc + 'x' + yc, combatnum);
         io.to(locationName).emit('recieve-combatdata', pl, lc, dp, xc, yc, combatnum, player.identity);
         logLastActivity(redis, player.identity);
         player.emit('approve-combatdata', pl, lc, dp, xc, yc, combatnum);
-        console.log('Passed combatdata: ' + locationName + ' - coords ' + xc + 'x' + yc + ' - combat ' + combatnum + ' - ' + player.identity);
+        //console.log('Passed combatdata: ' + locationName + ' - coords ' + xc + 'x' + yc + ' - combat ' + combatnum + ' - ' + player.identity);
     });
-    
+
 });
 
-function logLastActivity (r, n) {
+function logLastActivity(r, n) {
     var d = new Date();
     //r.set('fmt:lastactivity:' + n, d.getDay()+'.'+d.getMonth()+'.'+d.getFullYear()+' '+d.getHours()+':'+d.getMinutes()+':'+d.getSeconds());
     r.set('fmt:lastactivity:' + n, d.toString());
