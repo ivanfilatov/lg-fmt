@@ -1,23 +1,5 @@
-/*
- string CoordRegex = @"L-(\d+?).+?\((\d{1,}).+?(\d{1,})\)";
- string TrapImageRegex = @"name=""title_img"".+/(.+?)""";
- string HruRegex = @"id=""hru"".+?([0-9]+)%";
- string flagRegex = @"name=""flagImg"".+?(display:none)";
- string DoorRegex = @"id=""(d[0-9])"".+/(go.+)\.gif";
- string PlayersRegex = @"addr\('(.+?)'\)\""";
- string PicksBlockRegex = @"<div id=""picks"".+?>(.+?)</div>";
- string PickRegex = @"onclick=""(.+?)"".+?><td>(.+?)</td>";
- string MobsRegex = @"onclick=""javascript:attackPlayer\((-\d+)\).+?<td>\[Lvl.+?(\d+)\].+?<i>(.+?)</i>";
- */
-
-/*
- 0 - set image; 1 - maze[0-top-left]; 2 - maze[1-top-mid]; 3 - maze[2-top-right]; 4 - maze[3-mid-left]; 5 - maze[5-mid-right]; 6 - maze[6-bot-left]; 7 - maze[7-bot-mid]; 8 - maze[8-bot-right];
- if b - no action, a - move
- 1 - left; 2 - right; 3 - top; 4 - bottom; 5 - upstairs; 6 - downstairs; 7 - out
- */
-
 var IMGPATH = chrome.extension.getURL("img");
-var VERSION = '5.43';
+var VERSION = '5.51';
 
 Map = {
     NickName: false,
@@ -94,6 +76,9 @@ Map = {
 
         this.SocketServer.on('approve-connection', function () {
             window.top.Map.InitStatusSocketServer = true;
+            if (window.top.Map.InitStatusChatControls) {
+                window.top.Map.WriteToChat('Соединение установлено. Картограф FMT готов к работе.');
+            }
             window.top.Map.SocketServer.emit('pass-identity', window.top.Map.NickName);
         });
 
@@ -129,20 +114,41 @@ Map = {
         });
 
         this.SocketServer.on('join-location', function (player) {
-            if (player != window.top.Map.NickName) {
-                window.top.Map.WriteToChat('Игрок ' + player + ' появился в данной локации.');
-            }
+            /*if (player != window.top.Map.NickName) {
+             window.top.Map.WriteToChat('Игрок ' + player + ' появился в данной локации.');
+             }*/
         });
 
         this.SocketServer.on('leave-location', function (player) {
-            if (player != window.top.Map.NickName) {
-                window.top.Map.WriteToChat('Игрок ' + player + ' ушел из данной локации.');
+            /*if (player != window.top.Map.NickName) {
+             window.top.Map.WriteToChat('Игрок ' + player + ' ушел из данной локации.');
+             }*/
+        });
+
+        this.SocketServer.on('reject-connection', function (message) {
+            var alertMessage = 'Сервер разорвал соединение.';
+            switch (message) {
+                case 'version_mismatch': {
+                    alertMessage += ' Версия плагина отличается от требуемой сервером.';
+                    break;
+                }
+                default: {
+                    alertMessage += ' Неизвестная ошибка.';
+                    break;
+                }
             }
+            window.top.Map.ShowStatusMapFrame = false;
+            window.top.Map.LoadStatusMapData = false;
+            window.top.fortismapframe.document.body.innerHTML = this.HTML_LoadingPlaceholder;
+            alert(alertMessage);
         });
 
         this.SocketServer.on('disconnect', function () {
             window.top.Map.InitStatusSocketServer = false;
             window.top.Map.NameStatusSocketServer = false;
+            if (window.top.Map.InitStatusChatControls) {
+                window.top.Map.WriteToChat('Соединение разорвано, попытка восстановить...');
+            }
         });
     },
 
@@ -193,7 +199,7 @@ Map = {
     },
 
     // функция, обрабатывающая боевой фрейм
-    ProcessCombatPanel: function (fileCombatPanel) {
+    ProcessCombatPanel: function () {
         this.DefineLastKnownPosition();
         this.InsideCombat = true;
 
@@ -323,7 +329,7 @@ Map = {
                 var iL = 0;
                 var contL = true;
                 do {
-                    symbolL = splitloclist.split(' ')[iL + 1][0]
+                    symbolL = splitloclist.split(' ')[iL + 1][0];
                     if (symbolL == '0' || symbolL == '1' || symbolL == '2' || symbolL == '3' || symbolL == '4' || symbolL == '5' || symbolL == '6' || symbolL == '7' || symbolL == '8' || symbolL == '9') {
                         this.CurPlLocName += splitloclist.split(' ')[iL];
                         contL = false;
@@ -347,7 +353,11 @@ Map = {
             controlsElem.id = 'fortismapcontrols';
             controlsElem.name = 'fortismapcontrols';
             window.top.chat.document.documentElement.getElementsByTagName('frameset')[0].insertBefore(controlsElem, window.top.chat.document.documentElement.getElementsByTagName('frameset')[0].children[0]);
-            window.top.chat.fortismapcontrols.document.body.style.backgroundImage = "url(http://fantasyland.ru/images/grey.gif)";
+            if (this.InitStatusSocketServer) {
+                window.top.chat.fortismapcontrols.document.body.style.backgroundImage = "url(http://fantasyland.ru/images/grey.gif)";
+            } else {
+                window.top.chat.fortismapcontrols.document.body.style.backgroundColor = "red";
+            }
 
             var cssId = 'fmt-css-file-ctrl';
             if (!window.top.chat.fortismapcontrols.document.getElementById(cssId)) {
@@ -360,6 +370,12 @@ Map = {
         }
 
         window.top.chat.fortismapcontrols.document.body.innerHTML = this.HTML_Controls;
+
+        if (!this.InitStatusSocketServer) {
+            window.top.chat.fortismapcontrols.document.getElementById('fmt-ctrl-title').innerHTML = 'Картограф FMT v. ' + VERSION + ' (offline)';
+        } else {
+            this.WriteToChat('Соединение установлено. Картограф FMT готов к работе.');
+        }
 
         window.top.chat.fortismapcontrols.document.getElementById('fmt-scrbar-1').onclick = function () {
             window.top.loc.inv_snd.location.href = '/cgi/inv_wear.php?id=588';
@@ -431,8 +447,7 @@ Map = {
     InitMapFrame: function () {
         var mainFrame = window.top.document.getElementsByTagName('frameset')[0];
         var mapFrame = '<frame name="fortismapframe" id="fortismapframe" scrolling="yes">';
-        var newFrameset = '<frameset name="topframeset" id="topframeset" cols="*" scrolling="yes">\n' + mainFrame.outerHTML + '\n' + mapFrame + '\n</frameset>';
-        window.top.document.getElementsByTagName('frameset')[0].outerHTML = newFrameset;
+        window.top.document.getElementsByTagName('frameset')[0].outerHTML = '<frameset name="topframeset" id="topframeset" cols="*" scrolling="yes">\n' + mainFrame.outerHTML + '\n' + mapFrame + '\n</frameset>';
         window.top.fortismapframe.document.body.style.backgroundImage = 'url("http://fantasyland.ru/images/pic/bg.jpg")';
         window.top.fortismapframe.document.body.style.color = "#FFFFFF";
         window.top.fortismapframe.document.body.innerHTML = this.HTML_LoadingPlaceholder;
@@ -453,11 +468,12 @@ Map = {
 ';
 
         // rows
+        var xgrid;
         for (var y = 0; y <= this.CurDimY + 1; y++) {
             //top grid
             if (y == 0) {
                 mapTable += '<tr><td class="fmt-grid"></td>';
-                for (var xgrid = 1; xgrid <= this.CurDimX; xgrid++) {
+                for (xgrid = 1; xgrid <= this.CurDimX; xgrid++) {
                     mapTable += '<td class="fmt-grid">' + xgrid + '</td>';
                 }
                 mapTable += '<td class="fmt-grid"></td></tr>\n';
@@ -473,7 +489,7 @@ Map = {
             //bottom grid
             if (y == this.CurDimY + 1) {
                 mapTable += '<tr><td class="fmt-grid"></td>';
-                for (var xgrid = 1; xgrid <= this.CurDimX; xgrid++) {
+                for (xgrid = 1; xgrid <= this.CurDimX; xgrid++) {
                     mapTable += '<td class="fmt-grid">' + xgrid + '</td>';
                 }
                 mapTable += '<td class="fmt-grid"></td></tr>\n';
@@ -481,7 +497,6 @@ Map = {
         }
 
         mapTable += '</table>\n</center>';
-        //maptable += '<br /><p id="fmt-timestamps"></p>';
         // end table
 
         window.top.fortismapframe.document.body.innerHTML = this.CSS_Map + '\n' + mapTable;
@@ -522,10 +537,14 @@ Map = {
         this.ShowStatusMapFrame = false;
         this.LoadStatusMapData = false;
         window.top.fortismapframe.document.body.innerHTML = this.HTML_LoadingPlaceholder;
-        if (window.top.loc.no_combat !== null && window.top.loc.no_combat !== undefined) {
-            window.top.loc.no_combat.location.reload();
+        if (this.InitStatusSocketServer) {
+            if (window.top.loc.no_combat !== null && window.top.loc.no_combat !== undefined) {
+                window.top.loc.no_combat.location.reload();
+            } else {
+                window.top.loc.location.reload();
+            }
         } else {
-            window.top.loc.location.reload();
+            window.location.reload();
         }
         this.DefineMazeInfo();
     },
@@ -561,6 +580,8 @@ Map = {
     StyleCell: function (pl, loc, fl, x, y) {
         var cellData = this.CellData['' + pl + '-' + loc + '-' + fl + '_c' + x + 'x' + y + ''];
 
+        var nearx, neary;
+
         var cell = false;
         var time = false;
         var cellowner = false;
@@ -577,7 +598,7 @@ Map = {
             if (cellhour < currhour || (cellhour >= 4 && cellhour <= 23 && currhour >= 0 && currhour <= 3)) {
                 cellold = true;
             }
-            if(splitCellData[3]) {
+            if (splitCellData[3]) {
                 cellobj = "\nОбъект: " + splitCellData[3];
             }
         }
@@ -706,30 +727,30 @@ Map = {
                     }
                 }
             }
-            //way-n
-            var nearx = parseInt(x);
-            var neary = parseInt(y) - 1;
+            //way-north
+            nearx = parseInt(x);
+            neary = parseInt(y) - 1;
             mapCell.classList.add('fmt-n-' + cell[6]);
             if (nearx > 0 && neary > 0 && nearx <= this.CurDimX && neary <= this.CurDimY) {
                 window.top.fortismapframe.document.getElementById('c' + nearx + 'x' + neary).classList.add('fmt-s-' + cell[6]);
             }
-            //way-w
-            var nearx = parseInt(x) - 1;
-            var neary = parseInt(y);
+            //way-west
+            nearx = parseInt(x) - 1;
+            neary = parseInt(y);
             mapCell.classList.add('fmt-w-' + cell[7]);
             if (nearx > 0 && neary > 0 && nearx <= this.CurDimX && neary <= this.CurDimY) {
                 window.top.fortismapframe.document.getElementById('c' + nearx + 'x' + neary).classList.add('fmt-e-' + cell[7]);
             }
-            //way-e
-            var nearx = parseInt(x) + 1;
-            var neary = parseInt(y);
+            //way-east
+            nearx = parseInt(x) + 1;
+            neary = parseInt(y);
             mapCell.classList.add('fmt-e-' + cell[8]);
             if (nearx > 0 && neary > 0 && nearx <= this.CurDimX && neary <= this.CurDimY) {
                 window.top.fortismapframe.document.getElementById('c' + nearx + 'x' + neary).classList.add('fmt-w-' + cell[8]);
             }
-            //way-s
-            var nearx = parseInt(x);
-            var neary = parseInt(y) + 1;
+            //way-south
+            nearx = parseInt(x);
+            neary = parseInt(y) + 1;
             mapCell.classList.add('fmt-s-' + cell[9]);
             if (nearx > 0 && neary > 0 && nearx <= this.CurDimX && neary <= this.CurDimY) {
                 window.top.fortismapframe.document.getElementById('c' + nearx + 'x' + neary).classList.add('fmt-n-' + cell[9]);
@@ -869,6 +890,7 @@ Map = {
             this.CurDimY = false;
         }
     },
+
     ParseMazeFile: function (mazeFile) {
         var mazeFileStrWS = mazeFile.substr(mazeFile.indexOf('{') + 1, mazeFile.indexOf('}') - mazeFile.indexOf('{'));
         var mazeFileStr = mazeFileStrWS.replace(/\s/g, '');
@@ -923,7 +945,7 @@ Map = {
         if (mazeFileStr.indexOf('Вынаходите:') != -1) {
             if (mazeFileStr.indexOf('Портал') != -1 || mazeFileStr.indexOf('Капище') != -1) {
                 objectInfo = objectRegex.exec(mazeFileStrWS);
-                if(objectInfo.length > 1) {
+                if (objectInfo.length > 1) {
                     objectInfo = objectInfo[1];
                 } else {
                     objectInfo = false;
@@ -931,7 +953,7 @@ Map = {
                 exit = 1;
             } else {
                 objectInfo = objectRegex.exec(mazeFileStrWS);
-                if(objectInfo.length > 1) {
+                if (objectInfo.length > 1) {
                     objectInfo = objectInfo[1];
                 } else {
                     objectInfo = false;
@@ -970,6 +992,7 @@ Map = {
         }
         this.CellData['' + this.CurPlace + '-' + this.CurLocation + '-' + this.CurLevel + '_c' + this.CurCoordX + 'x' + this.CurCoordY + ''] = this.CurCellData;
     },
+
     ParseMove: function (moveStr) {
         var move;
         switch (moveStr) {
@@ -1311,8 +1334,19 @@ body {\
             }
         };
         xmlhttpMazeId.send(null);
-
     }
 };
 
 window.top.Map.Init();
+
+/*
+ string CoordRegex = @"L-(\d+?).+?\((\d{1,}).+?(\d{1,})\)";
+ string TrapImageRegex = @"name=""title_img"".+/(.+?)""";
+ string HruRegex = @"id=""hru"".+?([0-9]+)%";
+ string flagRegex = @"name=""flagImg"".+?(display:none)";
+ string DoorRegex = @"id=""(d[0-9])"".+/(go.+)\.gif";
+ string PlayersRegex = @"addr\('(.+?)'\)\""";
+ string PicksBlockRegex = @"<div id=""picks"".+?>(.+?)</div>";
+ string PickRegex = @"onclick=""(.+?)"".+?><td>(.+?)</td>";
+ string MobsRegex = @"onclick=""javascript:attackPlayer\((-\d+)\).+?<td>\[Lvl.+?(\d+)\].+?<i>(.+?)</i>";
+ */
