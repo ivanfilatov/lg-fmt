@@ -1,5 +1,5 @@
 var IMGPATH = chrome.extension.getURL("img");
-var VERSION = '5.51';
+var VERSION = chrome.runtime.getManifest().version;
 
 Map = {
     NickName: false,
@@ -68,7 +68,7 @@ Map = {
 
     // функции общения с сокет-сервером
     ServerConnect: function () {
-        this.SocketServer = io.connect('http://lg.fortis-ts.ru:8080');
+        this.SocketServer = io.connect('http://fmt.lg.fortis-ts.ru:8080');
 
         this.SocketServer.on('connect', function () {
             window.top.Map.SocketServer.emit('pass-connection', VERSION);
@@ -504,10 +504,46 @@ Map = {
         if (window.top.loc.no_combat !== null && window.top.loc.no_combat !== undefined) {
             window.top.loc.no_combat.document.documentElement.onkeyup = function (e) {
                 e.which = e.which || e.keyCode;
-                if (e.which == 13) {
+                if (e.which == 13 || e.which == 69 || e.which == 70) { // enter, e, f
                     var clickElem = window.top.loc.no_combat.document.querySelector('#picks table td img');
                     if (clickElem !== undefined && clickElem !== null) {
                         window.top.loc.no_combat.document.querySelector('#picks table td img').click();
+                    }
+                }
+                if (e.which == 81) { // q
+                    var moveExit = window.top.loc.no_combat.document.querySelector('#d0 > img');
+                    if (moveExit !== undefined && moveExit !== null) {
+                        window.top.loc.no_combat.document.querySelector('#d0 > img').click();
+                    }
+                }
+                if (e.which == 82) { // q
+                    var moveRefresh = window.top.loc.no_combat.document.querySelector('#d4 > img');
+                    if (moveRefresh !== undefined && moveRefresh !== null) {
+                        window.top.loc.no_combat.document.querySelector('#d4 > img').click();
+                    }
+                }
+                if (e.which == 87) { // w
+                    var moveNorth = window.top.loc.no_combat.document.querySelector('#d1 > img');
+                    if (moveNorth !== undefined && moveNorth !== null) {
+                        window.top.loc.no_combat.document.querySelector('#d1 > img').click();
+                    }
+                }
+                if (e.which == 65) { // a
+                    var moveWest = window.top.loc.no_combat.document.querySelector('#d3 > img');
+                    if (moveWest !== undefined && moveWest !== null) {
+                        window.top.loc.no_combat.document.querySelector('#d3 > img').click();
+                    }
+                }
+                if (e.which == 68) { // d
+                    var moveEast = window.top.loc.no_combat.document.querySelector('#d5 > img');
+                    if (moveEast !== undefined && moveEast !== null) {
+                        window.top.loc.no_combat.document.querySelector('#d5 > img').click();
+                    }
+                }
+                if (e.which == 83) { // s
+                    var moveSouth = window.top.loc.no_combat.document.querySelector('#d7 > img');
+                    if (moveSouth !== undefined && moveSouth !== null) {
+                        window.top.loc.no_combat.document.querySelector('#d7 > img').click();
                     }
                 }
                 return false;

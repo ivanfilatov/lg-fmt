@@ -1,6 +1,12 @@
 <?php
 
-/* @var $this yii\web\View */
+/**
+ * @var $this yii\web\View
+ * @var $playerNicknames []
+ * @var $playerActivityDataValues []
+ * @var $playerLocationsDataValues []
+ * @var $objectData []
+ */
 
 $this->title = 'Главная';
 ?>

@@ -2,30 +2,41 @@
 
 namespace app\models;
 
+use Yii;
+use yii\base\NotSupportedException;
+
+/**
+ * Class User
+ * @package app\models
+ *
+ * @property integer $id
+ * @property string $name
+ * @property string $code
+ * @property integer $admin
+ * @property string $accessToken
+ * @property string $authKey
+ * @property string $date
+ */
 class User extends \yii\redis\ActiveRecord implements \yii\web\IdentityInterface
 {
-    public $id;
-    public $name;
-    public $code;
-    public $accessToken;
-    public $authKey;
+    const ROLE_ADMIN = 1;
 
-    private static $users = [
-        '1' => [
-            'id' => '1',
-            'name' => 'Фортис',
-            'code' => 'hvn86x01ge',
-            'accessToken' => '',
-            'authKey' => '',
-        ],
-    ];
+    public static function keyPrefix()
+    {
+        return Yii::$app->params['dbKeyPrefix'] . parent::keyPrefix();
+    }
+
+    public function attributes()
+    {
+        return ['id', 'name', 'code', 'admin', 'accessToken', 'authKey', 'date'];
+    }
 
     /**
      * @inheritdoc
      */
     public static function findIdentity($id)
     {
-        return isset(self::$users[$id]) ? new static(self::$users[$id]) : null;
+        return static::findOne(['id' => $id]);
     }
 
     /**
@@ -33,13 +44,7 @@ class User extends \yii\redis\ActiveRecord implements \yii\web\IdentityInterface
      */
     public static function findIdentityByAccessToken($token, $type = null)
     {
-        foreach (self::$users as $user) {
-            if ($user['accessToken'] === $token) {
-                return new static($user);
-            }
-        }
-
-        return null;
+        throw new NotSupportedException('"findIdentityByAccessToken" is not implemented.');
     }
 
     /**
@@ -50,13 +55,7 @@ class User extends \yii\redis\ActiveRecord implements \yii\web\IdentityInterface
      */
     public static function findByName($name)
     {
-        foreach (self::$users as $user) {
-            if (strcasecmp($user['name'], $name) === 0) {
-                return new static($user);
-            }
-        }
-
-        return null;
+        return static::findOne(['name' => $name]);
     }
 
     /**
@@ -64,7 +63,7 @@ class User extends \yii\redis\ActiveRecord implements \yii\web\IdentityInterface
      */
     public function getId()
     {
-        return $this->id;
+        return $this->getPrimaryKey();
     }
 
     /**
@@ -91,6 +90,15 @@ class User extends \yii\redis\ActiveRecord implements \yii\web\IdentityInterface
      */
     public function validateCode($code)
     {
-        return $this->code === $code;
+        return Yii::$app->security->validatePassword($code, $this->code);
+    }
+
+    /**
+     * Checks if user is admin
+     * @return bool
+     */
+    public function isAdmin()
+    {
+        return (int)$this->admin === (int)self::ROLE_ADMIN;
     }
 }

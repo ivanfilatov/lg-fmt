@@ -2,6 +2,13 @@
 use yii\widgets\Breadcrumbs;
 use dmstr\widgets\Alert;
 
+$this->registerJs("
+$(document).ready(function () {
+    setTimeout(function () {
+        $('.alert').fadeOut('fast');
+    }, 3000);
+});
+");
 ?>
     <div class="content-wrapper">
         <section class="content-header">

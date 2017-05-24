@@ -32,7 +32,7 @@ $this->params['breadcrumbs'][] = $this->title;
         ?>
         <?=
         $form->field($model, 'code')
-            ->textInput(['class' => 'form-control', 'placeholder' => 'Код доступа'])
+            ->passwordInput(['class' => 'form-control', 'placeholder' => 'Код доступа'])
             ->hint("<span class=\"glyphicon glyphicon-lock form-control-feedback\"></span>")
         ?>
         <div class="row">

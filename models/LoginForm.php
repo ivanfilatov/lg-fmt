@@ -25,17 +25,15 @@ class LoginForm extends Model
     public function rules()
     {
         return [
-            // username and password are both required
             [['name'], 'required', 'message' => 'Необходимо ввести имя персонажа'],
             [['code'], 'required', 'message' => 'Необходимо ввести код доступа'],
-            // password is validated by validatePassword()
             ['code', 'validateCode'],
         ];
     }
 
     /**
-     * Validates the password.
-     * This method serves as the inline validation for password.
+     * Validates the access code.
+     * This method serves as the inline validation for code.
      *
      * @param string $attribute the attribute currently being validated
      * @param array $params the additional name-value pairs given in the rule

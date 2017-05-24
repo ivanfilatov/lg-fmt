@@ -9,9 +9,6 @@ $config = [
     'bootstrap' => ['log'],
     'controllerNamespace' => 'app\commands',
     'components' => [
-        'cache' => [
-            'class' => 'yii\caching\FileCache',
-        ],
         'log' => [
             'targets' => [
                 [
@@ -19,6 +16,16 @@ $config = [
                     'levels' => ['error', 'warning'],
                 ],
             ],
+        ],
+        'cache' => [
+            'class' => 'yii\caching\FileCache',
+        ],
+        'redis' => [
+            'class' => 'yii\redis\Connection',
+            'hostname' => 'localhost',
+            'password' => 'fortistello16',
+            'port' => 6379,
+            'database' => 0,
         ],
         'db' => $db,
     ],

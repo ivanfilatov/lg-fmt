@@ -20,8 +20,10 @@
                 'items' => [
                     ['label' => 'Управление группой', 'options' => ['class' => 'header']],
                     ['label' => 'Создать группу', 'icon' => 'user-plus', 'url' => ['/group/create']],
-                    ['label' => 'Название группы', 'icon' => 'font', 'url' => ['/group/name']],
+                    ['label' => 'Название группы', 'icon' => 'font', 'url' => ['/group/rename']],
                     ['label' => 'Состав группы', 'icon' => 'users', 'url' => ['/group/members']],
+                    ['label' => 'Передать права', 'icon' => 'exchange', 'url' => ['/group/transfer']],
+                    ['label' => 'Покинуть группу', 'icon' => 'sign-out', 'url' => ['/group/leave']],
                     ['label' => 'Расформировать группу', 'icon' => 'user-times', 'url' => ['/group/disband']],
 
                     //['label' => 'Управление картографом', 'options' => ['class' => 'header']],

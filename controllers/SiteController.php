@@ -5,6 +5,7 @@ namespace app\controllers;
 use Redis;
 use Yii;
 use yii\filters\AccessControl;
+use yii\redis\Connection;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
@@ -60,9 +61,8 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
-        $redis = new Redis();
-        $redis->connect('localhost');
-        $redis->auth('fortistello16');
+        /* @var $redis Connection */
+        $redis = Yii::$app->redis;
 
         $playerIdentitiesDataKeys = $redis->keys('fmt:identities:*');
         $playerNicknames = [];
@@ -74,13 +74,13 @@ class SiteController extends Controller
             $playerActivityDataKeys[] = 'fmt:lastactivity:' . $playerNickname;
             $playerLocationsDataKeys[] = 'fmt:locations:' . $playerNickname;
         }
-        $playerActivityDataValues = $redis->mget($playerActivityDataKeys);
-        $playerLocationsDataValues = $redis->mget($playerLocationsDataKeys);
+        $playerActivityDataValues = $redis->mget(...$playerActivityDataKeys);
+        $playerLocationsDataValues = $redis->mget(...$playerLocationsDataKeys);
 
         $objectData = [];
         $objectDataKeys = $redis->keys('fmt:objectdata:*');
-        $objectDataValues = $redis->mget($objectDataKeys);
-        if ($objectDataKeys && $objectDataValues) {
+        if ($objectDataKeys) {
+            $objectDataValues = $redis->mget(...$objectDataKeys);
             $objectData = array_combine($objectDataKeys, $objectDataValues);
         }
 

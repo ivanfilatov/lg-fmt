@@ -1,3 +1,10 @@
+/*
+ npm install socket.io
+ npm install express
+ npm install http
+ npm install redis
+ */
+
 var options = {};
 
 var express = require('express');
