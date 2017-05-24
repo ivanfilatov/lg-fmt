@@ -28,7 +28,7 @@ class SiteController extends Controller
                         'roles' => ['@'],
                     ],
                     [
-                        'actions' => ['login'],
+                        'actions' => ['login', 'plugin'],
                         'allow' => true,
                     ],
                 ],
@@ -124,5 +124,15 @@ class SiteController extends Controller
         Yii::$app->user->logout();
 
         return $this->goHome();
+    }
+
+    public function actionPlugin()
+    {
+        $pluginFile = Yii::getAlias('@app') . '/components/client/dist/dist.crx';
+        if (is_file($pluginFile)) {
+            return Yii::$app->response->xSendFile($pluginFile, 'fmt.crx');
+        }
+
+        return $this->redirect(['index']);
     }
 }
