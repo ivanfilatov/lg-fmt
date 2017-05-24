@@ -24,7 +24,7 @@ use yii\helpers\Html;
 
                             <p>
                                 <?= Yii::$app->user->identity->name ?>
-                                <small>Member since Nov. 2012</small>
+                                <small><?= Yii::$app->user->identity->isAdmin() ? 'Администратор' : 'Обычный пользователь' ?></small>
                             </p>
                         </li>
                         <!-- Menu Footer-->

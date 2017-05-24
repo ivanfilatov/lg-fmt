@@ -23,7 +23,7 @@ $this->title = 'Главная';
     <div class="panel panel-default">
         <div class="panel-heading">Активность</div>
         <div class="panel-body">
-            <?php if ($playerNicknames) : ?>
+            <?php if ($playerNicknames && Yii::$app->user->identity->isAdmin()) : ?>
                 <table class="table table-bordered table-hover">
                     <?php foreach ($playerNicknames as $playerNum => $data) : ?>
                         <tr>
@@ -42,7 +42,7 @@ $this->title = 'Главная';
     <div class="panel panel-default">
         <div class="panel-heading">Объекты</div>
         <div class="panel-body">
-            <?php if ($objectData) : ?>
+            <?php if ($objectData && Yii::$app->user->identity->isAdmin()) : ?>
                 <table class="table table-bordered table-hover">
                     <?php foreach ($objectData as $location => $object) : ?>
                         <tr>
