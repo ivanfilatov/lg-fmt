@@ -59,6 +59,7 @@ class Group extends ActiveRecord
         $membership = new GroupMember();
         $membership->group_id = (int)$this->id;
         $membership->member = (string)$name;
+        $membership->autofilled = (int)GroupMember::MEMBERSHIP_MANUAL;
         $membership->date = (string)date('d.m.Y H:i:s');
         $membership->save();
     }
@@ -76,11 +77,14 @@ class Group extends ActiveRecord
         $newMembership->delete();
     }
 
-    public function transferAdminRights($newAdminName)
+    public function dropAllMembers()
     {
-        $this->admin = (string)$newAdminName;
-        $this->date = (string)date('d.m.Y H:i:s');
-        $this->save();
+        GroupMember::deleteAll(['group_id' => $this->id]);
+    }
+
+    public function dropAllAutofilledMembers()
+    {
+        GroupMember::deleteAll(['group_id' => $this->id, 'autofilled' => GroupMember::MEMBERSHIP_AUTOFILLED]);
     }
 
     public function fillMembersFromClanSquad($clanId)
@@ -88,20 +92,26 @@ class Group extends ActiveRecord
         $squad = LigaHelper::getClanSquadNames($clanId);
 
         foreach ($squad as $player) {
-            $myMembership = new GroupMember();
-            $myMembership->group_id = (int)$this->id;
-            $myMembership->member = (string)$player;
-            $myMembership->date = (string)date('d.m.Y H:i:s');
-            $myMembership->save();
+            /* @var $existingMembership GroupMember */
+            $existingMembership = GroupMember::find()->where(['member' => $player])->one();
+            if (!$existingMembership || ($existingMembership && $existingMembership->isAutofilled())) {
+                if ($existingMembership) {
+                    $existingMembership->delete();
+                }
+                $membership = new GroupMember();
+                $membership->group_id = (int)$this->id;
+                $membership->member = (string)$player;
+                $membership->autofilled = (int)GroupMember::MEMBERSHIP_AUTOFILLED;
+                $membership->date = (string)date('d.m.Y H:i:s');
+                $membership->save();
+            }
         }
     }
 
-    public function dropAllMembers()
+    public function transferAdminRights($newAdminName)
     {
-        /* @var $existingMemberships GroupMember[] */
-        $existingMemberships = GroupMember::find()->where(['group_id' => $this->id])->all();
-        foreach ($existingMemberships as $existingMembership) {
-            $existingMembership->delete();
-        }
+        $this->admin = (string)$newAdminName;
+        $this->date = (string)date('d.m.Y H:i:s');
+        $this->save();
     }
 }

@@ -20,9 +20,6 @@ $this->title = 'Управление составом группы';
         <div class="panel-body">
             <?php if (!$groupForm->_group) : ?>
                 Вы не состоите в группе!
-            <?php elseif ($groupForm->_group->isClanGroup()) : ?>
-                Группа "<?= $groupForm->_group->name ?>" (ID#<?= $groupForm->_group->id ?>) привязана к клану!<br/>
-                Состав клановой группы обновляется ежедневно.
             <?php elseif (!$groupForm->_group->administrationAvailable()) : ?>
                 Вы не являетесь администратором группы "<?= $groupForm->_group->name ?>" (ID#<?= $groupForm->_group->id ?>)!<br/>
                 Текущий администратор: <?= $groupForm->_group->admin ?>.
@@ -41,7 +38,7 @@ $this->title = 'Управление составом группы';
         <div class="panel-body">
             <?php if (!$groupForm->_group) : ?>
                 Вы не состоите в группе!
-            <?php elseif ($groupForm->_group->isClanGroup() || !$groupForm->_group->administrationAvailable()) : ?>
+            <?php elseif (!$groupForm->_group->administrationAvailable()) : ?>
                 <div class="row">
                     <?php foreach ($groupForm->_group->members as $groupMembership) : ?>
                         <?php /* @var $groupMembership GroupMember */ ?>
@@ -57,13 +54,19 @@ $this->title = 'Управление составом группы';
                     <?php foreach ($groupForm->_group->members as $groupMembership) : ?>
                         <?php /* @var $groupMembership GroupMember */ ?>
                         <div class="col-lg-2">
-                            <?php $form = ActiveForm::begin(['fieldConfig' => ['options' => ['tag' => false]]]) ?>
-                            <div class="well well-sm text-center">
-                                <?= $groupMembership->member ?>
-                                <?= $form->field($groupForm, 'membershipToDelete', ['template' => '{input}'])->hiddenInput(['value' => $groupMembership->id])->label(false) ?>
-                                <?= Html::submitButton(\rmrevin\yii\fontawesome\FA::i('times'), ['class' => 'btn btn-xs btn-danger pull-right']) ?>
-                            </div>
-                            <?php ActiveForm::end(); ?>
+                            <?php if ($groupMembership->isAutofilled()) : ?>
+                                <div class="well well-sm text-center">
+                                    <?= $groupMembership->member ?>
+                                </div>
+                            <?php else : ?>
+                                <?php $form = ActiveForm::begin(['fieldConfig' => ['options' => ['tag' => false]]]) ?>
+                                <div class="well well-sm text-center">
+                                    <?= $groupMembership->member ?>
+                                    <?= $form->field($groupForm, 'membershipToDelete', ['template' => '{input}'])->hiddenInput(['value' => $groupMembership->id])->label(false) ?>
+                                    <?= Html::submitButton(\rmrevin\yii\fontawesome\FA::i('times'), ['class' => 'btn btn-xs btn-danger pull-right']) ?>
+                                </div>
+                                <?php ActiveForm::end(); ?>
+                            <?php endif; ?>
                         </div>
                     <?php endforeach; ?>
                 </div>

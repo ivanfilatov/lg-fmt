@@ -44,12 +44,12 @@ class CommonController extends Controller
         $groups = Group::find()->all();
         foreach ($groups as $group) {
             if ($group->isClanGroup()) {
-                $group->dropAllMembers();
+                $group->dropAllAutofilledMembers();
                 $group->fillMembersFromClanSquad($group->clan);
                 $counter++;
             }
         }
-        $this->stdout('Кол-во обновленных групп: ' . $counter . "\n", Console::FG_GREEN);
+        $this->stdout('Кол-во обновленных клановых групп: ' . $counter . "\n", Console::FG_GREEN);
     }
 
     /**
@@ -57,6 +57,8 @@ class CommonController extends Controller
      */
     public function actionProcessDailyJobs()
     {
+        $this->actionUpdateClanGroups();
+
         $counter = 0;
         $groupsDataForNodeServer = [];
         /* @var $groups Group[] */
@@ -64,11 +66,11 @@ class CommonController extends Controller
         foreach ($groups as $group) {
             foreach ($group->members as $groupMembership) {
                 $groupsDataForNodeServer[$groupMembership->member] = (int)$group->id;
+                $counter++;
             }
-            $counter++;
         }
         Yii::$app->redis->set('fmt:_groups', json_encode($groupsDataForNodeServer, JSON_UNESCAPED_UNICODE));
-        $this->stdout('Кол-во обновленных групп: ' . $counter . "\n", Console::FG_GREEN);
+        $this->stdout('Кол-во обновленных записей пользователей: ' . $counter . "\n", Console::FG_GREEN);
         $restartServer = exec('supervisorctl restart fmt');
         if ($restartServer == 'fmt: started') {
             $this->stdout('Сервер перезапущен' . "\n", Console::FG_GREEN);

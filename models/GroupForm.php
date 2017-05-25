@@ -86,7 +86,7 @@ class GroupForm extends Model
         $existingMembership = GroupMember::find()->where(['member' => $this->membershipToAdd])->one();
         if ($existingMembership && $existingMembership->group_id == $this->_group->id) {
             $this->addError($attribute, 'Игрок уже состоит в этой группе');
-        } elseif ($existingMembership) {
+        } elseif ($existingMembership && !$existingMembership->isAutofilled()) {
             $this->addError($attribute, 'Игрок уже состоит в другой группе');
         }
 
@@ -146,6 +146,7 @@ class GroupForm extends Model
     public function editMembers()
     {
         if ($this->membershipToAdd) {
+            GroupMember::deleteAll(['member' => $this->membershipToAdd]);
             $this->_group->addMember($this->membershipToAdd);
         }
 
