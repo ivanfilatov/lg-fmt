@@ -355,7 +355,7 @@ Map = {
             var controlsElem = window.top.chat.document.createElement('td');
             controlsElem.setAttribute('style', 'width: 100%; height: 100%;');
             controlsElem.setAttribute('valign', 'top');
-            controlsElem.innerHTML = '<div style="width: 180px; height: 100%; overflow: auto;"><iframe name="fortismapcontrols" id="fortismapcontrols" width="100%" height="100%" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"></iframe></div>';
+            controlsElem.innerHTML = '<div style="width: 180px; height: 100%;"><iframe name="fortismapcontrols" id="fortismapcontrols" width="100%" height="100%" frameborder="0" marginwidth="0" marginheight="0" scrolling="auto"></iframe></div>';
             window.top.chat.document.documentElement.querySelector('table > tbody > tr:first-child').append(controlsElem);
             if (this.InitStatusSocketServer) {
                 window.top.chat.fortismapcontrols.document.body.style.backgroundImage = "url(http://fantasyland.ru/images/grey.gif)";
@@ -627,36 +627,42 @@ Map = {
     },
 
     DownSizeMap: function () {
-        var currentMapFrameSize = parseInt(window.top.document.querySelector('iframe#fortismapframe').getAttribute('width'));
-        var newMapFrameSize = currentMapFrameSize - 30;
-        if (newMapFrameSize > 0) {
-            newMapFrameSize = newMapFrameSize + 'px';
-            this.SetMapFrameSize(newMapFrameSize);
-            window.top.document.querySelector('iframe#fortismapframe').setAttribute('width', newMapFrameSize);
-        } else {
-            this.HideMap();
+        if (this.ShowStatusMapFrame) {
+            var currentMapFrameSize = parseInt(window.top.document.querySelector('iframe#fortismapframe').getAttribute('width'));
+            var newMapFrameSize = currentMapFrameSize - 30;
+            if (newMapFrameSize > 0) {
+                newMapFrameSize = newMapFrameSize + 'px';
+                this.SetMapFrameSize(newMapFrameSize);
+                window.top.document.querySelector('iframe#fortismapframe').setAttribute('width', newMapFrameSize);
+            } else {
+                this.HideMap();
+            }
         }
     },
 
     UpSizeMap: function () {
-        var currentMapFrameSize = parseInt(window.top.document.querySelector('iframe#fortismapframe').getAttribute('width'));
-        var newMapFrameSize = currentMapFrameSize + 30;
-        newMapFrameSize = newMapFrameSize + 'px';
-        this.SetMapFrameSize(newMapFrameSize);
-        window.top.document.querySelector('iframe#fortismapframe').setAttribute('width', newMapFrameSize);
+        if (this.ShowStatusMapFrame) {
+            var currentMapFrameSize = parseInt(window.top.document.querySelector('iframe#fortismapframe').getAttribute('width'));
+            var newMapFrameSize = currentMapFrameSize + 30;
+            newMapFrameSize = newMapFrameSize + 'px';
+            this.SetMapFrameSize(newMapFrameSize);
+            window.top.document.querySelector('iframe#fortismapframe').setAttribute('width', newMapFrameSize);
+        }
     },
 
     AutoSizeMap: function (size) {
-        var newMapFrameSize;
-        if (size === MAPSIZE_XXL) {
-            newMapFrameSize = Math.min(20 * this.CurDimX, 600) + 'px';
-        } else if (size === MAPSIZE_XL) {
-            newMapFrameSize = Math.min(18 * this.CurDimX, 540) + 'px';
-        } else {
-            newMapFrameSize = Math.min(16 * this.CurDimX, 480) + 'px';
+        if (this.ShowStatusMapFrame) {
+            var newMapFrameSize;
+            if (size === MAPSIZE_XXL) {
+                newMapFrameSize = Math.min(20 * this.CurDimX, 600) + 'px';
+            } else if (size === MAPSIZE_XL) {
+                newMapFrameSize = Math.min(18 * this.CurDimX, 540) + 'px';
+            } else {
+                newMapFrameSize = Math.min(16 * this.CurDimX, 480) + 'px';
+            }
+            this.SetMapFrameSize(newMapFrameSize);
+            window.top.document.querySelector('iframe#fortismapframe').setAttribute('width', newMapFrameSize);
         }
-        this.SetMapFrameSize(newMapFrameSize);
-        window.top.document.querySelector('iframe#fortismapframe').setAttribute('width', newMapFrameSize);
     },
 
     HideMap: function () {
