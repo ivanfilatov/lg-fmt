@@ -1,6 +1,10 @@
 var IMGPATH = chrome.extension.getURL("img");
 var VERSION = chrome.runtime.getManifest().version;
 
+var MAPSIZE_DEFAULT = 'default';
+var MAPSIZE_XL = 'xl';
+var MAPSIZE_XXL = 'xxl';
+
 Map = {
     NickName: false,
 
@@ -190,7 +194,7 @@ Map = {
         }
 
         if (this.InitStatusChatControls) {
-            this.DefineMazeInfo();
+            this.UpdateChatControls();
         }
 
         if (this.InitStatusSocketServer && this.NameStatusSocketServer) {
@@ -231,7 +235,7 @@ Map = {
         }
 
         if (this.InitStatusChatControls) {
-            this.DefineMazeInfo();
+            this.UpdateChatControls();
         }
 
         if (this.InitStatusSocketServer && this.NameStatusSocketServer) {
@@ -347,11 +351,12 @@ Map = {
 
     // функция инициализирует фрейм над чатом с контроль-элементами
     InitChatControls: function () {
-        if (window.top.chat.document.documentElement.querySelector('table > tbody').children.length === 2) {
-            var controlsElem = window.top.chat.document.createElement('tr');
-            controlsElem.setAttribute('style', 'width: 100%; height: 100%');
-            controlsElem.innerHTML = '<td><iframe name="fortismapcontrols" id="fortismapcontrols" width="100%" height="36px" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"></iframe></td>';
-            window.top.chat.document.documentElement.querySelector('table > tbody').insertBefore(controlsElem, window.top.chat.document.documentElement.querySelector('table > tbody > tr:first-child'));
+        if (window.top.chat.document.documentElement.querySelector('table > tbody > tr:first-child').children.length === 1) {
+            var controlsElem = window.top.chat.document.createElement('td');
+            controlsElem.setAttribute('style', 'width: 100%; height: 100%;');
+            controlsElem.setAttribute('valign', 'top');
+            controlsElem.innerHTML = '<div style="width: 180px; height: 100%; overflow: auto;"><iframe name="fortismapcontrols" id="fortismapcontrols" width="100%" height="100%" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"></iframe></div>';
+            window.top.chat.document.documentElement.querySelector('table > tbody > tr:first-child').append(controlsElem);
             if (this.InitStatusSocketServer) {
                 window.top.chat.fortismapcontrols.document.body.style.backgroundImage = "url(http://fantasyland.ru/images/grey.gif)";
             } else {
@@ -393,15 +398,19 @@ Map = {
             return false;
         };
         window.top.chat.fortismapcontrols.document.getElementById('fmt-scrbar-5').onclick = function () {
-            window.top.loc.inv_snd.location.href = '/cgi/inv_wear.php?id=590';
-            return false;
-        };
-        window.top.chat.fortismapcontrols.document.getElementById('fmt-scrbar-6').onclick = function () {
             window.top.loc.inv_snd.location.href = '/cgi/inv_wear.php?id=591';
             return false;
         };
-        window.top.chat.fortismapcontrols.document.getElementById('fmt-scrbar-7').onclick = function () {
+        window.top.chat.fortismapcontrols.document.getElementById('fmt-scrbar-6').onclick = function () {
             window.top.loc.inv_snd.location.href = '/cgi/inv_wear.php?id=592';
+            return false;
+        };
+        window.top.chat.fortismapcontrols.document.getElementById('fmt-scrbar-7').onclick = function () {
+            window.top.loc.inv_snd.location.href = '/cgi/inv_wear.php?id=590';
+            return false;
+        };
+        window.top.chat.fortismapcontrols.document.getElementById('fmt-scrbar-8').onclick = function () {
+            window.top.loc.inv_snd.location.href = '/cgi/inv_wear.php?id=541';
             return false;
         };
 
@@ -415,19 +424,46 @@ Map = {
         window.top.chat.fortismapcontrols.document.getElementById('fmt-size-def').onclick = function () {
             window.top.fortismapframe.document.getElementById('fmt-main-table').classList.remove('fmt-xl');
             window.top.fortismapframe.document.getElementById('fmt-main-table').classList.remove('fmt-xxl');
+            window.top.Map.AutoSizeMap(MAPSIZE_DEFAULT);
             return false;
         };
         window.top.chat.fortismapcontrols.document.getElementById('fmt-size-xl').onclick = function () {
-            window.top.fortismapframe.document.getElementById('fmt-main-table').classList.add('fmt-xl');
+            window.top.fortismapframe.document.getElementById('fmt-main-table').classList.remove('fmt-xl');
             window.top.fortismapframe.document.getElementById('fmt-main-table').classList.remove('fmt-xxl');
+            window.top.fortismapframe.document.getElementById('fmt-main-table').classList.add('fmt-xl');
+            window.top.Map.AutoSizeMap(MAPSIZE_XL);
             return false;
         };
         window.top.chat.fortismapcontrols.document.getElementById('fmt-size-xxl').onclick = function () {
             window.top.fortismapframe.document.getElementById('fmt-main-table').classList.remove('fmt-xl');
+            window.top.fortismapframe.document.getElementById('fmt-main-table').classList.remove('fmt-xxl');
             window.top.fortismapframe.document.getElementById('fmt-main-table').classList.add('fmt-xxl');
+            window.top.Map.AutoSizeMap(MAPSIZE_XXL);
             return false;
         };
 
+        window.top.chat.fortismapcontrols.document.getElementById('fmt-downsizebtn').onclick = function () {
+            window.top.Map.DownSizeMap();
+            return false;
+        };
+        window.top.chat.fortismapcontrols.document.getElementById('fmt-upsizebtn').onclick = function () {
+            window.top.Map.UpSizeMap();
+            return false;
+        };
+        window.top.chat.fortismapcontrols.document.getElementById('fmt-autosizebtn').onclick = function () {
+            if (window.top.fortismapframe.document.getElementById('fmt-main-table').classList.contains('fmt-xxl')) {
+                window.top.Map.AutoSizeMap(MAPSIZE_XXL);
+            } else if (window.top.fortismapframe.document.getElementById('fmt-main-table').classList.contains('fmt-xl')) {
+                window.top.Map.AutoSizeMap(MAPSIZE_XL);
+            } else {
+                window.top.Map.AutoSizeMap(MAPSIZE_DEFAULT);
+            }
+            return false;
+        };
+        window.top.chat.fortismapcontrols.document.getElementById('fmt-unhidebtn').onclick = function () {
+            window.top.Map.ShowMap();
+            return false;
+        };
         window.top.chat.fortismapcontrols.document.getElementById('fmt-hidebtn').onclick = function () {
             window.top.Map.HideMap();
             return false;
@@ -440,6 +476,42 @@ Map = {
             window.top.Map.ReloadMap();
             return false;
         };
+    },
+
+    UpdateChatControls: function () {
+        window.top.chat.fortismapcontrols.document.getElementById('fmt-mapname').innerHTML = this.CurPlLocName;
+
+        var xmlhttpMazeId = this.GetXmlHttp();
+        xmlhttpMazeId.open('GET', '/cgi/technical_maze_id.php?loc=' + this.CurLocation + '&place=' + this.CurPlace, false);
+        xmlhttpMazeId.onreadystatechange = function () {
+            if (xmlhttpMazeId.readyState == 4) {
+                if (xmlhttpMazeId.status == 200) {
+                    var mazeId = xmlhttpMazeId.responseText;
+                    var mobs = '---';
+                    var loot = '---';
+                    if (mazeId > 0) {
+                        var xmlhttpMazeInfo = window.top.Map.GetXmlHttp();
+                        xmlhttpMazeInfo.open('GET', '/cgi/technical_lab_info.php?maze_id=' + mazeId, false);
+                        xmlhttpMazeInfo.onreadystatechange = function () {
+                            if (xmlhttpMazeInfo.readyState == 4) {
+                                if (xmlhttpMazeInfo.status == 200) {
+                                    var resp = xmlhttpMazeInfo.responseText;
+                                    var mazeinfo = resp.split(' ');
+                                    if (mazeinfo.length == 2) {
+                                        mobs = mazeinfo[1];
+                                        loot = mazeinfo[0];
+                                    }
+                                }
+                            }
+                        };
+                        xmlhttpMazeInfo.send(null);
+                    }
+                    window.top.chat.fortismapcontrols.document.getElementById('fmt-mazeinfo-mobs').innerHTML = mobs;
+                    window.top.chat.fortismapcontrols.document.getElementById('fmt-mazeinfo-loot').innerHTML = loot;
+                }
+            }
+        };
+        xmlhttpMazeId.send(null);
     },
 
     // функция инициализирует фрейм с картой
@@ -551,7 +623,40 @@ Map = {
             };
         }
 
-        this.SetMapFrameSize(Math.min(16 * this.CurDimX, 650) + 'px');
+        this.AutoSizeMap(MAPSIZE_DEFAULT);
+    },
+
+    DownSizeMap: function () {
+        var currentMapFrameSize = parseInt(window.top.document.querySelector('iframe#fortismapframe').getAttribute('width'));
+        var newMapFrameSize = currentMapFrameSize - 30;
+        if (newMapFrameSize > 0) {
+            newMapFrameSize = newMapFrameSize + 'px';
+            this.SetMapFrameSize(newMapFrameSize);
+            window.top.document.querySelector('iframe#fortismapframe').setAttribute('width', newMapFrameSize);
+        } else {
+            this.HideMap();
+        }
+    },
+
+    UpSizeMap: function () {
+        var currentMapFrameSize = parseInt(window.top.document.querySelector('iframe#fortismapframe').getAttribute('width'));
+        var newMapFrameSize = currentMapFrameSize + 30;
+        newMapFrameSize = newMapFrameSize + 'px';
+        this.SetMapFrameSize(newMapFrameSize);
+        window.top.document.querySelector('iframe#fortismapframe').setAttribute('width', newMapFrameSize);
+    },
+
+    AutoSizeMap: function (size) {
+        var newMapFrameSize;
+        if (size === MAPSIZE_XXL) {
+            newMapFrameSize = Math.min(20 * this.CurDimX, 600) + 'px';
+        } else if (size === MAPSIZE_XL) {
+            newMapFrameSize = Math.min(18 * this.CurDimX, 540) + 'px';
+        } else {
+            newMapFrameSize = Math.min(16 * this.CurDimX, 480) + 'px';
+        }
+        this.SetMapFrameSize(newMapFrameSize);
+        window.top.document.querySelector('iframe#fortismapframe').setAttribute('width', newMapFrameSize);
     },
 
     HideMap: function () {
@@ -560,6 +665,9 @@ Map = {
         window.top.document.querySelector('iframe#fortismapframe').setAttribute('width', '0');
         if (!this.LoadStatusMapData) {
             window.top.fortismapframe.document.body.innerHTML = this.HTML_LoadingPlaceholder;
+            window.top.chat.fortismapcontrols.document.getElementById('fmt-corx').innerHTML = '#';
+            window.top.chat.fortismapcontrols.document.getElementById('fmt-cory').innerHTML = '#';
+            window.top.chat.fortismapcontrols.document.getElementById('fmt-floor').innerHTML = '#';
         }
     },
 
@@ -583,7 +691,7 @@ Map = {
         } else {
             window.location.reload();
         }
-        this.DefineMazeInfo();
+        this.UpdateChatControls();
     },
 
     CenterMap: function (myPointElement) {
@@ -803,6 +911,11 @@ Map = {
         window.top.fortismapframe.document.getElementById('fmt-corx').innerHTML = this.CurCoordX;
         window.top.fortismapframe.document.getElementById('fmt-cory').innerHTML = this.CurCoordY;
         window.top.fortismapframe.document.getElementById('fmt-floor').innerHTML = this.CurLevel;
+
+        window.top.chat.fortismapcontrols.document.getElementById('fmt-mapname').innerHTML = this.CurPlLocName;
+        window.top.chat.fortismapcontrols.document.getElementById('fmt-corx').innerHTML = this.CurCoordX;
+        window.top.chat.fortismapcontrols.document.getElementById('fmt-cory').innerHTML = this.CurCoordY;
+        window.top.chat.fortismapcontrols.document.getElementById('fmt-floor').innerHTML = this.CurLevel;
 
         var myPointElem = window.top.fortismapframe.document.getElementById('c' + this.CurCoordX + 'x' + this.CurCoordY);
         this.CenterMap(myPointElem);
@@ -1215,40 +1328,59 @@ Map = {
 ',
 
     HTML_Controls: '\
-<div id="fmt-ctrl-title" style="font-size:12pt; color: white; float: left; padding: 6px 10px 6px 10px;">Картограф FMT v. ' + VERSION + '</div>\
-<div style="color: #ffffff; float: right; padding: 6px 10px 6px 10px; border-left: 2px dashed white;">\
-Действия: \
-<a id="fmt-hidebtn" style="cursor:hand;cursor:pointer;border:1px solid #aaaaaa; padding: 0 3px;"><b>&rAarr;</b></a>&nbsp;\
-<a id="fmt-unhidebtn" style="cursor:hand;cursor:pointer;border:1px solid #aaaaaa; padding: 0 3px;"><b>&lAarr;</b></a>&nbsp;\
-<a id="fmt-reloadbtn" style="cursor:hand;cursor:pointer;border:1px solid #aaaaaa; padding: 0 3px;"><b>&orarr;</b></a>\
+<div id="fmt-ctrl-title" style="box-sizing: border-box; width: 100%; text-align: center; font-size:.9em; color: #ffffff; padding: 6px 10px 6px 10px; border-bottom: 1px dashed white;">Картограф FMT v. ' + VERSION + '</div>\
+\
+<div style="box-sizing: border-box; width: 100%; text-align: center; color: #ffffff; padding: 6px 10px 6px 10px; border-bottom: 1px dashed white;">\
+<div id="fmt-mapname">#</div>\
+<hr style="margin-block-start: 0.2em; margin-block-end: 0.2em;"/>\
+<div>Этаж: <span id="fmt-floor">#</span></div>\
+<div>Координаты: <span id="fmt-corx">#</span> x <span id="fmt-cory">#</span></div>\
 </div>\
-<div style="color: #ffffff; float: right; padding: 7px 10px 7px 10px; border-left: 2px dashed white;">\
+\
+<div style="box-sizing: border-box; width: 100%; text-align: center; color: #ffffff; padding: 6px 10px 6px 10px; border-bottom: 1px dashed white;">\
+<table border="0" style="display: inline-block;"><tr>\
+<td style="margin-right: 6px;"><img src="http://fantasyland.ru/images/miscellaneous/attack_player.gif" style="vertical-align: middle; margin: 0; padding: 0;" /></td>\
+<td id="fmt-mazeinfo-mobs" style="color: #ffffff; font-weight: bold;">---</td>\
+<td style="margin-left: 6px; margin-right: 6px;"><img src="http://fantasyland.ru/images/miscellaneous/pick_up_gold.gif" style="vertical-align: middle; margin: 0; padding: 0;" /></td>\
+<td id="fmt-mazeinfo-loot" style="color: #ffffff; font-weight: bold;">---</td>\
+</tr></table>\
+</div>\
+\
+<div style="box-sizing: border-box; width: 100%; text-align: center; color: #ffffff; padding: 6px 10px 6px 10px;">\
+Фрейм: \
+<a id="fmt-downsizebtn" style="cursor:hand; cursor:pointer; border:1px solid #aaaaaa; padding: 0 3px;"><b>&minus;</b></a>&nbsp;\
+<a id="fmt-upsizebtn" style="cursor:hand;cursor:pointer; border:1px solid #aaaaaa; padding: 0 3px;"><b>&#43;</b></a>&nbsp;\
+<a id="fmt-autosizebtn" style="cursor:hand; cursor:pointer; border:1px solid #aaaaaa; padding: 0 3px;"><b>auto</b></a>\
+</div>\
+<div style="box-sizing: border-box; width: 100%; text-align: center; color: #ffffff; padding: 6px 10px 6px 10px;">\
+Действия: \
+<a id="fmt-hidebtn" style="cursor:hand; cursor:pointer; border:1px solid #aaaaaa; padding: 0 3px;"><b>&rAarr;</b></a>&nbsp;\
+<a id="fmt-unhidebtn" style="cursor:hand;cursor:pointer; border:1px solid #aaaaaa; padding: 0 3px;"><b>&lAarr;</b></a>&nbsp;\
+<a id="fmt-reloadbtn" style="cursor:hand;cursor:pointer; border:1px solid #aaaaaa; padding: 0 3px;"><b>&orarr;</b></a>\
+</div>\
+\
+<div style="box-sizing: border-box; width: 100%; text-align: center; color: #ffffff; padding: 6px 10px 6px 10px; border-bottom: 1px dashed white;">\
 Масштаб: \
 <a id="fmt-size-def" style="cursor:hand;cursor:pointer;border:1px solid #aaaaaa; padding: 0 3px;"><b>S</b></a>&nbsp;\
 <a id="fmt-size-xl" style="cursor:hand;cursor:pointer;border:1px solid #aaaaaa; padding: 0 3px;"><b>M</b></a>&nbsp;\
 <a id="fmt-size-xxl" style="cursor:hand;cursor:pointer;border:1px solid #aaaaaa; padding: 0 3px;"><b>L</b></a>\
 </div>\
-<div style="color: #ffffff; float: right; padding: 0px 10px 0px 10px; border-left: 2px dashed white;">\
-<a id="fmt-scrbar-1" style="cursor:hand;cursor:pointer;"><table cellspacing="0" cellpadding="0" border="0" width="32" height="32" style="float: left; border: 0; margin: 0 3px;"><tbody><tr><td valign="middle" background="http://fantasyland.ru/images/grey.gif"><center><img src="http://fantasyland.ru/images/items/scroll_l_f0.gif" border="0" width="32" height="32"></center></td></tr></tbody></table></a>\
-<a id="fmt-scrbar-2" style="cursor:hand;cursor:pointer;"><table cellspacing="0" cellpadding="0" border="0" width="32" height="32" style="float: left; border: 0; margin: 0 3px;"><tbody><tr><td valign="middle" background="http://fantasyland.ru/images/grey.gif"><center><img src="http://fantasyland.ru/images/items/scroll_l_s0.gif" border="0" width="32" height="32"></center></td></tr></tbody></table></a>\
-<a id="fmt-scrbar-3" style="cursor:hand;cursor:pointer;"><table cellspacing="0" cellpadding="0" border="0" width="32" height="32" style="float: left; border: 0; margin: 0 3px;"><tbody><tr><td valign="middle" background="http://fantasyland.ru/images/grey.gif"><center><img src="http://fantasyland.ru/images/items/scroll_l_f1.gif" border="0" width="32" height="32"></center></td></tr></tbody></table></a>\
-<a id="fmt-scrbar-4" style="cursor:hand;cursor:pointer;"><table cellspacing="0" cellpadding="0" border="0" width="32" height="32" style="float: left; border: 0; margin: 0 3px;"><tbody><tr><td valign="middle" background="http://fantasyland.ru/images/grey.gif"><center><img src="http://fantasyland.ru/images/items/scroll_l_s1.gif" border="0" width="32" height="32"></center></td></tr></tbody></table></a>\
-<a id="fmt-scrbar-5" style="cursor:hand;cursor:pointer;"><table cellspacing="0" cellpadding="0" border="0" width="32" height="32" style="float: left; border: 0; margin: 0 3px;"><tbody><tr><td valign="middle" background="http://fantasyland.ru/images/grey.gif"><center><img src="http://fantasyland.ru/images/items/scroll_l_t0.gif" border="0" width="32" height="32"></center></td></tr></tbody></table></a>\
-<a id="fmt-scrbar-6" style="cursor:hand;cursor:pointer;"><table cellspacing="0" cellpadding="0" border="0" width="32" height="32" style="float: left; border: 0; margin: 0 3px;"><tbody><tr><td valign="middle" background="http://fantasyland.ru/images/grey.gif"><center><img src="http://fantasyland.ru/images/items/scroll_l_dn.gif" border="0" width="32" height="32"></center></td></tr></tbody></table></a>\
-<a id="fmt-scrbar-7" style="cursor:hand;cursor:pointer;"><table cellspacing="0" cellpadding="0" border="0" width="32" height="32" style="float: left; border: 0; margin: 0 3px;"><tbody><tr><td valign="middle" background="http://fantasyland.ru/images/grey.gif"><center><img src="http://fantasyland.ru/images/items/scroll_l_up.gif" border="0" width="32" height="32"></center></td></tr></tbody></table></a>\
-</div>\
-<div style="color: #ffffff; float: right; padding: 3px 10px 3px 10px; border-left: 2px dashed white;">\
-<table border="0" width="100%"><tr>\
-<td><img src="http://fantasyland.ru/images/miscellaneous/attack_player.gif" style="vertical-align: middle; margin: 0; padding: 0;" /></td><td id="fmt-mazeinfo-mobs" style="color: #ffffff; font-weight: bold;">---</td>\
-<td><img src="http://fantasyland.ru/images/miscellaneous/pick_up_gold.gif" style="vertical-align: middle; margin: 0; padding: 0;" /></td><td id="fmt-mazeinfo-loot" style="color: #ffffff; font-weight: bold;">---</td>\
-</tr></table>\
+\
+<div style="box-sizing: border-box; width: 100%; text-align: center; color: #ffffff; padding: 6px 10px 6px 10px;">\
+<a id="fmt-scrbar-1" style="display: inline-block; cursor:hand;cursor:pointer;"><table cellspacing="0" cellpadding="0" border="0" width="58" height="58" style="border: 0; margin: 0 3px;"><tbody><tr><td valign="middle" background="http://fantasyland.ru/images/grey.gif"><center><img src="http://fantasyland.ru/images/items/scroll_l_f0.gif" border="0" width="58" height="58"></center></td></tr></tbody></table></a>\
+<a id="fmt-scrbar-2" style="display: inline-block; cursor:hand;cursor:pointer;"><table cellspacing="0" cellpadding="0" border="0" width="58" height="58" style="border: 0; margin: 0 3px;"><tbody><tr><td valign="middle" background="http://fantasyland.ru/images/grey.gif"><center><img src="http://fantasyland.ru/images/items/scroll_l_s0.gif" border="0" width="58" height="58"></center></td></tr></tbody></table></a>\
+<a id="fmt-scrbar-3" style="display: inline-block; cursor:hand;cursor:pointer;"><table cellspacing="0" cellpadding="0" border="0" width="58" height="58" style="border: 0; margin: 0 3px;"><tbody><tr><td valign="middle" background="http://fantasyland.ru/images/grey.gif"><center><img src="http://fantasyland.ru/images/items/scroll_l_f1.gif" border="0" width="58" height="58"></center></td></tr></tbody></table></a>\
+<a id="fmt-scrbar-4" style="display: inline-block; cursor:hand;cursor:pointer;"><table cellspacing="0" cellpadding="0" border="0" width="58" height="58" style="border: 0; margin: 0 3px;"><tbody><tr><td valign="middle" background="http://fantasyland.ru/images/grey.gif"><center><img src="http://fantasyland.ru/images/items/scroll_l_s1.gif" border="0" width="58" height="58"></center></td></tr></tbody></table></a>\
+<a id="fmt-scrbar-5" style="display: inline-block; cursor:hand;cursor:pointer;"><table cellspacing="0" cellpadding="0" border="0" width="58" height="58" style="border: 0; margin: 0 3px;"><tbody><tr><td valign="middle" background="http://fantasyland.ru/images/grey.gif"><center><img src="http://fantasyland.ru/images/items/scroll_l_dn.gif" border="0" width="58" height="58"></center></td></tr></tbody></table></a>\
+<a id="fmt-scrbar-6" style="display: inline-block; cursor:hand;cursor:pointer;"><table cellspacing="0" cellpadding="0" border="0" width="58" height="58" style="border: 0; margin: 0 3px;"><tbody><tr><td valign="middle" background="http://fantasyland.ru/images/grey.gif"><center><img src="http://fantasyland.ru/images/items/scroll_l_up.gif" border="0" width="58" height="58"></center></td></tr></tbody></table></a>\
+<a id="fmt-scrbar-7" style="display: inline-block; cursor:hand;cursor:pointer;"><table cellspacing="0" cellpadding="0" border="0" width="58" height="58" style="border: 0; margin: 0 3px;"><tbody><tr><td valign="middle" background="http://fantasyland.ru/images/grey.gif"><center><img src="http://fantasyland.ru/images/items/scroll_l_t0.gif" border="0" width="58" height="58"></center></td></tr></tbody></table></a>\
+<a id="fmt-scrbar-8" style="display: inline-block; cursor:hand;cursor:pointer;"><table cellspacing="0" cellpadding="0" border="0" width="58" height="58" style="border: 0; margin: 0 3px;"><tbody><tr><td valign="middle" background="http://fantasyland.ru/images/grey.gif"><center><img src="http://fantasyland.ru/images/items/svitok_teleport.gif" border="0" width="58" height="58"></center></td></tr></tbody></table></a>\
 </div>\
 ',
 
     CSS_Controls: '\
 html {\
-    border: 2px dashed white;\
-    border-top: 0;\
+    border: 0;\
 }\
 body {\
     margin: 1px 0;\
@@ -1337,41 +1469,8 @@ body {\
 .fmt-w-c {border-left: 1px solid #079a00 !important;}\
 .fmt-e-c {border-right: 1px solid #079a00 !important;}\
 .fmt-s-c {border-bottom: 1px solid #079a00 !important;}\
-</style>',
+</style>'
 
-    DefineMazeInfo: function () {
-        var xmlhttpMazeId = this.GetXmlHttp();
-        xmlhttpMazeId.open('GET', '/cgi/technical_maze_id.php?loc=' + this.CurLocation + '&place=' + this.CurPlace, false);
-        xmlhttpMazeId.onreadystatechange = function () {
-            if (xmlhttpMazeId.readyState == 4) {
-                if (xmlhttpMazeId.status == 200) {
-                    var mazeId = xmlhttpMazeId.responseText;
-                    var mobs = '---';
-                    var loot = '---';
-                    if (mazeId > 0) {
-                        var xmlhttpMazeInfo = window.top.Map.GetXmlHttp();
-                        xmlhttpMazeInfo.open('GET', '/cgi/technical_lab_info.php?maze_id=' + mazeId, false);
-                        xmlhttpMazeInfo.onreadystatechange = function () {
-                            if (xmlhttpMazeInfo.readyState == 4) {
-                                if (xmlhttpMazeInfo.status == 200) {
-                                    var resp = xmlhttpMazeInfo.responseText;
-                                    var mazeinfo = resp.split(' ');
-                                    if (mazeinfo.length == 2) {
-                                        mobs = mazeinfo[1];
-                                        loot = mazeinfo[0];
-                                    }
-                                }
-                            }
-                        };
-                        xmlhttpMazeInfo.send(null);
-                    }
-                    window.top.chat.fortismapcontrols.document.getElementById('fmt-mazeinfo-mobs').innerHTML = mobs;
-                    window.top.chat.fortismapcontrols.document.getElementById('fmt-mazeinfo-loot').innerHTML = loot;
-                }
-            }
-        };
-        xmlhttpMazeId.send(null);
-    }
 };
 
 window.top.Map.Init();
