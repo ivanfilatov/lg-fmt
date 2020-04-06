@@ -57,7 +57,7 @@
   "name": "Сетевой картограф FMT",
   "permissions": [
     "storage",
-    "http://fmt.lg.fortis-ts.ru/*"
+    "http://fmt.lg.imfilatov.com/*"
   ],
-  "version": "5.61"
+  "version": "5.70"
 }

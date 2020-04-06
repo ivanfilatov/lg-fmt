@@ -1,8 +1,5 @@
 /*
- npm install socket.io
- npm install express
- npm install http
- npm install redis
+ npm install socket.io express http redis
  */
 
 var options = {};

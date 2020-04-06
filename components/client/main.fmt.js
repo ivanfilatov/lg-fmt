@@ -68,7 +68,7 @@ Map = {
 
     // функции общения с сокет-сервером
     ServerConnect: function () {
-        this.SocketServer = io.connect('http://fmt.lg.fortis-ts.ru:8080');
+        this.SocketServer = io.connect('http://fmt.lg.imfilatov.com:8080');
 
         this.SocketServer.on('connect', function () {
             window.top.Map.SocketServer.emit('pass-connection', VERSION);
@@ -347,12 +347,11 @@ Map = {
 
     // функция инициализирует фрейм над чатом с контроль-элементами
     InitChatControls: function () {
-        window.top.chat.document.documentElement.getElementsByTagName('frameset')[0].setAttribute('rows', '36,*,32,0,0,0,0');
-        if (window.top.chat.document.documentElement.getElementsByTagName('frameset')[0].children.length == 6) {
-            var controlsElem = window.top.chat.document.createElement('frame');
-            controlsElem.id = 'fortismapcontrols';
-            controlsElem.name = 'fortismapcontrols';
-            window.top.chat.document.documentElement.getElementsByTagName('frameset')[0].insertBefore(controlsElem, window.top.chat.document.documentElement.getElementsByTagName('frameset')[0].children[0]);
+        if (window.top.chat.document.documentElement.querySelector('table > tbody').children.length === 2) {
+            var controlsElem = window.top.chat.document.createElement('tr');
+            controlsElem.setAttribute('style', 'width: 100%; height: 100%');
+            controlsElem.innerHTML = '<td><iframe name="fortismapcontrols" id="fortismapcontrols" width="100%" height="36px" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"></iframe></td>';
+            window.top.chat.document.documentElement.querySelector('table > tbody').insertBefore(controlsElem, window.top.chat.document.documentElement.querySelector('table > tbody > tr:first-child'));
             if (this.InitStatusSocketServer) {
                 window.top.chat.fortismapcontrols.document.body.style.backgroundImage = "url(http://fantasyland.ru/images/grey.gif)";
             } else {
@@ -445,10 +444,12 @@ Map = {
 
     // функция инициализирует фрейм с картой
     InitMapFrame: function () {
-        var mainFrame = window.top.document.getElementsByTagName('frameset')[0];
-        var mapFrame = '<frame name="fortismapframe" id="fortismapframe" scrolling="yes">';
-        window.top.document.getElementsByTagName('frameset')[0].outerHTML = '<frameset name="topframeset" id="topframeset" cols="*" scrolling="yes">\n' + mainFrame.outerHTML + '\n' + mapFrame + '\n</frameset>';
-        window.top.fortismapframe.document.body.style.backgroundImage = 'url("http://fantasyland.ru/images/pic/bg.jpg")';
+        var topFrame = window.top.document.querySelector('table > tbody > tr:first-child');
+        var mapFrame = document.createElement('td');
+        mapFrame.setAttribute('rowspan', '3');
+        mapFrame.setAttribute('valign', 'top');
+        mapFrame.innerHTML = '<br/><iframe name="fortismapframe" id="fortismapframe" style="height: calc(100% - 18px)" width="500px" frameborder="0" marginwidth="0" marginheight="0" scrolling="no"></iframe>';
+        topFrame.appendChild(mapFrame);
         window.top.fortismapframe.document.body.style.color = "#FFFFFF";
         window.top.fortismapframe.document.body.innerHTML = this.HTML_LoadingPlaceholder;
         this.InitStatusMapFrame = true;
@@ -459,11 +460,11 @@ Map = {
     DrawMap: function () {
         // start table
         var mapTable = '\
-<div id="fmt-hidestatus" style="display:none;">visible</div>\
 <center><h3 id="fmt-mapname">' + this.CurPlLocName + '</h3>\
 <hr />\
 <h4>Этаж: <span id="fmt-floor">#</span>. Координаты: <span id="fmt-corx">#</span> x <span id="fmt-cory">#</span></h4>\
 <hr />\
+<div id="fmt-main-table-scroll" style="height: calc(100% - 113px); overflow: auto;">\
 <table cellspacing="0" class="fmt" id="fmt-main-table">\
 ';
 
@@ -496,7 +497,7 @@ Map = {
             }
         }
 
-        mapTable += '</table>\n</center>';
+        mapTable += '</table>\n</div>\n</center>';
         // end table
 
         window.top.fortismapframe.document.body.innerHTML = this.CSS_Map + '\n' + mapTable;
@@ -550,13 +551,13 @@ Map = {
             };
         }
 
-        this.SetMapFrameSize(Math.min(16 * this.CurDimX, 650));
+        this.SetMapFrameSize(Math.min(16 * this.CurDimX, 650) + 'px');
     },
 
     HideMap: function () {
         this.ShowStatusMapFrame = false;
-        this.SetMapFrameSize(window.top.fortismapframe.document.body.clientWidth);
-        window.top.document.getElementsByTagName('frameset')[0].setAttribute('cols', '*');
+        this.SetMapFrameSize(window.top.document.querySelector('iframe#fortismapframe').getAttribute('width'));
+        window.top.document.querySelector('iframe#fortismapframe').setAttribute('width', '0');
         if (!this.LoadStatusMapData) {
             window.top.fortismapframe.document.body.innerHTML = this.HTML_LoadingPlaceholder;
         }
@@ -564,8 +565,8 @@ Map = {
 
     ShowMap: function () {
         this.ShowStatusMapFrame = true;
-        if (window.top.document.getElementsByTagName('frameset')[0].getAttribute('cols') == '*') {
-            window.top.document.getElementsByTagName('frameset')[0].setAttribute('cols', '*,' + this.GetMapFrameSize());
+        if (window.top.document.querySelector('iframe#fortismapframe').getAttribute('width') === '0') {
+            window.top.document.querySelector('iframe#fortismapframe').setAttribute('width', this.GetMapFrameSize());
         } //resize only if 0-width
     },
 
@@ -593,11 +594,11 @@ Map = {
         var meElemOffsetTop = myPointElement.offsetTop;
         var meElemWidth = myPointElement.offsetWidth;
         var meElemHeight = myPointElement.offsetHeight;
-        var frameElemWidth = window.top.fortismapframe.innerWidth;
-        var frameElemHeight = window.top.fortismapframe.innerHeight;
+        var frameElemWidth = window.top.fortismapframe.document.getElementById('fmt-main-table-scroll').getBoundingClientRect().width;
+        var frameElemHeight = window.top.fortismapframe.document.getElementById('fmt-main-table-scroll').getBoundingClientRect().height;
         var scrollToX = meElemOffsetLeft - (frameElemWidth - meElemWidth) / 2 + fmtTableOffsetLeft;
         var scrollToY = meElemOffsetTop - (frameElemHeight - meElemHeight) / 2 + fmtTableOffsetTop;
-        window.top.fortismapframe.scrollTo(scrollToX, scrollToY);
+        window.top.fortismapframe.document.getElementById('fmt-main-table-scroll').scrollTo(scrollToX, scrollToY);
     },
 
     LoadMapData: function (styleOnly) {

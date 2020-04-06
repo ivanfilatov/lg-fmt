@@ -2,7 +2,6 @@
 
 namespace app\controllers;
 
-use Redis;
 use Yii;
 use yii\filters\AccessControl;
 use yii\redis\Connection;
@@ -74,8 +73,8 @@ class SiteController extends Controller
             $playerActivityDataKeys[] = 'fmt:lastactivity:' . $playerNickname;
             $playerLocationsDataKeys[] = 'fmt:locations:' . $playerNickname;
         }
-        $playerActivityDataValues = $redis->mget(...$playerActivityDataKeys);
-        $playerLocationsDataValues = $redis->mget(...$playerLocationsDataKeys);
+        $playerActivityDataValues = $playerActivityDataKeys ? $redis->mget(...$playerActivityDataKeys) : [];
+        $playerLocationsDataValues = $playerLocationsDataKeys ? $redis->mget(...$playerLocationsDataKeys) : [];
 
         $objectData = [];
         $objectDataKeys = $redis->keys('fmt:objectdata:*');
