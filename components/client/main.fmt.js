@@ -256,6 +256,9 @@ Map = {
             if (this.InsideCombat) {
                 this.LoadMapData(false);
                 this.InsideCombat = false;
+                if (!this.ShowStatusMapFrame) {
+                    this.ShowMap();
+                }
             }
         }
 
@@ -652,13 +655,14 @@ Map = {
 
     AutoSizeMap: function (size) {
         if (this.ShowStatusMapFrame) {
+            var gameFrameSize = window.top.loc.document.body.getBoundingClientRect().width;
             var newMapFrameSize;
             if (size === MAPSIZE_XXL) {
-                newMapFrameSize = Math.min(20 * this.CurDimX, 600) + 'px';
+                newMapFrameSize = Math.min(20 * this.CurDimX, gameFrameSize) + 'px';
             } else if (size === MAPSIZE_XL) {
-                newMapFrameSize = Math.min(18 * this.CurDimX, 540) + 'px';
+                newMapFrameSize = Math.min(18 * this.CurDimX, gameFrameSize) + 'px';
             } else {
-                newMapFrameSize = Math.min(16 * this.CurDimX, 480) + 'px';
+                newMapFrameSize = Math.min(16 * this.CurDimX, gameFrameSize) + 'px';
             }
             this.SetMapFrameSize(newMapFrameSize);
             window.top.document.querySelector('iframe#fortismapframe').setAttribute('width', newMapFrameSize);
